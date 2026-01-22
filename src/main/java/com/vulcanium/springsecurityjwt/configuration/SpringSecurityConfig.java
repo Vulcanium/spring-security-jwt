@@ -1,5 +1,6 @@
 package com.vulcanium.springsecurityjwt.configuration;
 
+import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -13,7 +14,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -36,12 +39,6 @@ public class SpringSecurityConfig {
                 .build();
     }
 
-    // Create a password encoder, required for proper authentication
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
     // In-memory user creation to simulate test users without a database
     @Bean
     public UserDetailsService users() {
@@ -54,7 +51,20 @@ public class SpringSecurityConfig {
         return new InMemoryUserDetailsManager(user);
     }
 
-    // JWT decoder to process incoming requests that contain a Bearer Token
+
+    // Create a password encoder, required for proper authentication
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    // JWT encoder to provide a Bearer Token (HS256 symmetric signing algorithm)
+    @Bean
+    public JwtEncoder jwtEncoder() {
+        return new NimbusJwtEncoder(new ImmutableSecret<>(JWT_KEY.getBytes()));
+    }
+
+    // JWT decoder to process incoming requests that contain a Bearer Token (HS256 symmetric signing algorithm)
     @Bean
     public JwtDecoder jwtDecoder() {
         SecretKeySpec secretKey = new SecretKeySpec(JWT_KEY.getBytes(), 0, JWT_KEY.getBytes().length, "RSA");
